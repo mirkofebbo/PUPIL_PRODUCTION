@@ -1,3 +1,44 @@
+# Pupil Labs Device Manager
+
+This project provides an interface to discover and control Pupil Labs devices using their Realtime API. It is built with Python's Tkinter for the user interface, and asyncio for managing the asynchronous communication with the devices.
+
+## Features
+
+- Discover Pupil Labs devices on the network
+- Start/Stop recording on each individual device
+- Start/Stop recording on all devices simultaneously
+- Send a message to all devices
+
+## Getting Started
+
+These instructions will get you a copy of the project up and running on your local machine.
+
+### Prerequisites
+
+- Python 3.10+
+- Pupil Labs Realtime API package (pip install pupil_labs)
+
+## Usage
+
+- Start the application and click on "Discover Devices" button to discover the Pupil Labs devices in the network.
+- The discovered devices are displayed with their name, IP, battery level, and glasses serial number.
+- Use "Start Recording" button next to each device to start/stop recording on that specific device.
+- Use "Start Recording All" button to start/stop recording on all devices simultaneously.
+- Use "Send Message" button to send a predefined message to all devices.
+
+## Contributing
+
+Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE.md file for details.
+
+## Acknowledgments
+
+- Thanks to Pupil Labs for providing the Realtime API
+
+
 # Explaining the App Class
 
 The `App` class is the main class that drives the functionality of the GUI application. The `App` class makes use of several other components such as `Tkinter` for the GUI, `asyncio` for asynchronous operations, and the `DeviceHandler` class for handling device-related functionalities.

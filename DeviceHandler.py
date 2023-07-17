@@ -1,6 +1,7 @@
 # device_handler.py
 import asyncio
 from pupil_labs.realtime_api import Device, StatusUpdateNotifier
+from pupil_labs.realtime_api.time_echo import TimeOffsetEstimator
 import time
 
 class DeviceHandler:
@@ -9,6 +10,8 @@ class DeviceHandler:
         self.dev_info = dev_info
         self.device = None
         self.status = None
+        self.is_recording = False
+        self.record_button = None
 
     async def init_device(self):
         self.device = Device.from_discovered_device(self.dev_info)
@@ -40,14 +43,17 @@ class DeviceHandler:
     async def send_message(self, message, u_time):
         # Send a message
         try:
-            estimate = self.device.estimate_time_offset()
-            u_time_offset = estimate.time_offset_ms.mean *1000000  # Convert MS to NS 
+            time_offset_estimator = TimeOffsetEstimator(self.status.phone.ip, self.status.phone.time_echo_port)
+            estimate = await time_offset_estimator.estimate()
+            u_time_offset = estimate.time_offset_ms.mean * 1000000  # Convert MS to NS 
             newtime = u_time - u_time_offset
-            event = self.device.send_event(f'{message} o:{u_time_offset} t:{u_time}', event_timestamp_unix_ns=newtime)
+            await self.device.send_event(f'{message} o:{u_time_offset} t:{u_time}', event_timestamp_unix_ns=newtime)
             # print(event)
         except:
             print('Not found')
 
+
+
     @staticmethod
     def print_recording(status):
-        print("Recording: ", status.recording.is_recording)
+        print("Recording: ", status.recording.rec_duration_ns)
