@@ -52,7 +52,22 @@ class DeviceHandler:
         except:
             print('Not found')
 
+    async def start_status_update(self, duration=20):
+            if not self.connected:
+                print(f"Can't start status update, device {self.dev_info['name']} is disconnected")
+                return
+                
+            print(f"Starting auto-update for {duration} seconds")
+            # Create notifier with callbacks to print_component method
+            notifier = StatusUpdateNotifier(self.device, callbacks=[self.print_component])
+            
+            # Start receiving updates
+            await notifier.receive_updates_start()
 
+            await asyncio.sleep(duration)
+
+            print("Stopping auto-update")
+            await notifier.receive_updates_stop()
 
     @staticmethod
     def print_recording(status):

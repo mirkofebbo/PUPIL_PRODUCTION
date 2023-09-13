@@ -1,39 +1,85 @@
 import asyncio
 import tkinter as tk
+from tkinter import ttk
 from pupil_labs.realtime_api import Device, Network
 from DeviceHandler import DeviceHandler
-import threading
+import time
+# Data loging
+import csv
+from datetime import datetime
+import os
+import json
+from datetime import datetime
+from pylsl import StreamInfo, StreamOutlet
 
 class App:
 
     def __init__(self, root, loop):
+    
         self.root = root
         self.handlers = []
         self.loop = loop
         self.device_frame = tk.Frame(self.root)
-        self.device_frame.pack()
-        self.is_any_recording = False  # State variable to track if any recording is in progress
+        self.device_frame.pack(fill=tk.X)
+        self.is_any_recording = False 
 
-        # Discover button
-        self.discover_button = tk.Button(self.root, text="Discover Devices", 
-                                         command=self.discover_devices_threadsafe)
-        self.discover_button.pack()
+        # Create LSL stream
+        info = StreamInfo('TABARNAK V3', 'Markers', 1, 0, 'string', 'myuidw43536')
+        self.outlet = StreamOutlet(info)
 
-        # Start all button
-        self.start_all_button = tk.Button(self.root, text="Start Recording All", 
-                                          command=self.toggle_recording_all)
-        self.start_all_button.pack()
+        self.navbar_frame = tk.Frame(self.root)
+        self.navbar_frame.pack(fill=tk.X)
 
-        message = "Placeholder"
-        u_time = 1234567890
-        self.send_button = tk.Button(self.root, text="Send Message",
-                                     command=lambda: self.send_message_all(message, u_time))
-        self.send_button.pack()
+        self.discover_button = tk.Button(self.navbar_frame, text="Discover Devices", 
+                                        command=self.discover_devices_threadsafe)
+        self.discover_button.pack(side=tk.LEFT)  
 
+        self.start_all_button = tk.Button(self.navbar_frame, text="Start Recording All", 
+                                        command=self.toggle_recording_all)
+        self.start_all_button.pack(side=tk.LEFT)  
+        
+        self.custom_frame = tk.Frame(self.root)  
+        self.custom_frame.pack(fill=tk.X) 
+
+        self.custom_input = tk.Entry(self.custom_frame)
+        self.custom_input.pack(side=tk.LEFT)
+
+        def send_and_clear():
+            self.send_message_all(self.custom_input.get(), time.time_ns())
+            self.custom_input.delete(0, 'end')
+
+        self.custom_button = tk.Button(self.custom_frame, text="SEND", command=send_and_clear)
+        self.custom_button.pack(side=tk.LEFT)
+
+        self.custom_input.bind('<Return>', lambda _: send_and_clear())
+        
+        self.heartbeat()
+        self.tasks = []
+
+
+    #==== SENDING MESSAGE ====
     def send_message_all(self, message, u_time):
-        for handler in self.handlers:
-            asyncio.run_coroutine_threadsafe(handler.send_message(message, u_time), self.loop)
+        # Default message
+        formatted_message = f"{message}"
 
+        # Send message through LSL
+        self.outlet.push_sample([formatted_message])
+
+        for handler in self.handlers:
+            task = asyncio.run_coroutine_threadsafe(handler.send_message(formatted_message, u_time), self.loop)
+            self.tasks.append(task)
+
+    def heartbeat(self):
+        u_time = time.time_ns()
+        # This function sends a heartbeat message to all devices every 10 seconds
+        self.send_message_all("H", u_time)
+        # Schedule the next heartbeat for 10 seconds from now
+        self.heartbeat_id = self.root.after(10000, self.heartbeat)        # Note that because it is using the Tkinter event loop to schedule the heartbeat function, 
+        # the function itself doesn't need to be threadsafe. 
+        # The after method is the standard way to schedule recurring events in Tkinter.
+        # self.write_to_csv(u_time, "H", "STAGE TEST")
+
+    # ==== RECORDING ====
     def toggle_recording_all(self):
         if self.is_any_recording:
             # If any recording is in progress, stop all
@@ -60,9 +106,7 @@ class App:
             handler.is_recording = True
             button.config(text="Stop Recording")
 
-    def send_message(self, handler, message, u_time):
-        asyncio.run_coroutine_threadsafe(handler.send_message(message, u_time), self.loop)
-
+    # ==== DEVICE DISCOVERY ====
     def discover_devices_threadsafe(self):
         # Schedule discover_devices() coroutine to run on the asyncio event loop
         asyncio.run_coroutine_threadsafe(self.discover_devices(), self.loop)
@@ -98,25 +142,26 @@ class App:
         devices_info = await self.get_device_info()  # Get the updated info
         self.root.after(0, self.display_devices, devices_info)  # Schedule on the Tkinter event loop
 
+    # ==== DEVICE DISPLAY ====
     async def get_device_info(self):
-        return [await handler.get_info() for handler in self.handlers]
+        return [await handler.get_info() for handler in sorted(self.handlers, key=lambda handler: handler.dev_info.name)]
 
     def display_devices(self, devices_info):
         # Clear previous device labels
         for widget in self.device_frame.winfo_children():
             widget.destroy()
 
+        # Sort the device handlers by device name before displaying
+        self.handlers.sort(key=lambda handler: handler.dev_info.name)
+
         # Display current list of devices
         for i, device_info in enumerate(devices_info):
-            device_label = tk.Label(self.device_frame, text=device_info)
-            device_label.pack()
 
             # Creating a new function here creates a closure that keeps the values of `handler` and `record_button` 
             def make_button(handler):
                 record_button = tk.Button(self.device_frame, text="Start Recording",
-                                  command=lambda: self.toggle_recording(self.handlers[i], record_button))
-                
-                record_button.pack()
+                                command=lambda: self.toggle_recording(self.handlers[i], record_button))
+                record_button.grid(row=i, column=0)  # put the button on the left
 
                 self.handlers[i].record_button = record_button
 
@@ -124,9 +169,19 @@ class App:
 
             make_button(self.handlers[i])
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    loop = asyncio.get_event_loop()
-    app = App(root, loop)
-    threading.Thread(target=loop.run_forever, daemon=True).start()
-    root.mainloop()
+            device_label = tk.Label(self.device_frame, text=device_info)
+            device_label.grid(row=i, column=1)  # put the text on the right
+
+            
+    def close(self):
+        # Cancel the heartbeat function
+        self.root.after_cancel(self.heartbeat_id)
+
+        # Cancel all tasks
+        for task in self.tasks:
+            task.cancel()
+
+        # Then destroy the window
+        self.root.destroy()
+
+
