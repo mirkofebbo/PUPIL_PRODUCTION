@@ -7,10 +7,7 @@ import time
 # Data loging
 import csv
 from datetime import datetime
-import os
-import json
-from datetime import datetime
-from pylsl import StreamInfo, StreamOutlet
+from pylsl import StreamInfo, StreamOutlet, local_clock
 
 class App:
 
@@ -45,7 +42,7 @@ class App:
         self.custom_input.pack(side=tk.LEFT)
 
         def send_and_clear():
-            self.send_message_all(self.custom_input.get(), time.time_ns())
+            self.send_message_all(self.custom_input.get())
             self.custom_input.delete(0, 'end')
 
         self.custom_button = tk.Button(self.custom_frame, text="SEND", command=send_and_clear)
@@ -58,26 +55,27 @@ class App:
 
 
     #==== SENDING MESSAGE ====
-    def send_message_all(self, message, u_time):
+    def send_message_all(self, message):
         # Default message
+        lsl_time = local_clock()
         formatted_message = f"{message}"
-
+        u_time = time.time()
+        print('lsl time', lsl_time, 'unix_time', time.time())
         # Send message through LSL
         self.outlet.push_sample([formatted_message])
 
         for handler in self.handlers:
-            task = asyncio.run_coroutine_threadsafe(handler.send_message(formatted_message, u_time), self.loop)
+            task = asyncio.run_coroutine_threadsafe(handler.send_message(formatted_message, lsl_time, u_time), self.loop)
             self.tasks.append(task)
 
     def heartbeat(self):
-        u_time = time.time_ns()
         # This function sends a heartbeat message to all devices every 10 seconds
-        self.send_message_all("H", u_time)
+        self.send_message_all("H")
         # Schedule the next heartbeat for 10 seconds from now
         self.heartbeat_id = self.root.after(10000, self.heartbeat)        # Note that because it is using the Tkinter event loop to schedule the heartbeat function, 
         # the function itself doesn't need to be threadsafe. 
         # The after method is the standard way to schedule recurring events in Tkinter.
-        # self.write_to_csv(u_time, "H", "STAGE TEST")
+        # self.write_to_csv(lsl_time, "H", "STAGE TEST")
 
     # ==== RECORDING ====
     def toggle_recording_all(self):

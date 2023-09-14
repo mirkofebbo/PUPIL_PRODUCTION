@@ -5,7 +5,7 @@ from app import App
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("TABARNAK V2")
+    root.title("TABARNAK V3")
     root.geometry("500x600")  # Set the initial size of the window
 
     # Grid layout

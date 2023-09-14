@@ -40,19 +40,24 @@ class DeviceHandler:
         await self.device.recording_stop_and_save()
         await asyncio.sleep(2)  # wait for confirmation via auto-update
 
-    async def send_message(self, message, u_time):
+    async def send_message(self, message, lsl_time, u_time):
+
+        if not self.connected:
+            print(f"Can't send message, device {self.dev_info['name']} is disconnected")
+            return
         # Send a message
         try:
             time_offset_estimator = TimeOffsetEstimator(self.status.phone.ip, self.status.phone.time_echo_port)
             estimate = await time_offset_estimator.estimate()
             u_time_offset = estimate.time_offset_ms.mean * 1000000  # Convert MS to NS 
             newtime = u_time - u_time_offset
-            await self.device.send_event(f'{message} o:{u_time_offset} t:{u_time}', event_timestamp_unix_ns=newtime)
+            await self.device.send_event(f'{message} o:{u_time_offset} lsl: {lsl_time} t:{u_time}', event_timestamp_unix_ns=newtime)
             # print(event)
         except:
-            print('Not found')
+            print(self.status.phone.device_name, ' Not found')
 
     async def start_status_update(self, duration=20):
+        
             if not self.connected:
                 print(f"Can't start status update, device {self.dev_info['name']} is disconnected")
                 return
