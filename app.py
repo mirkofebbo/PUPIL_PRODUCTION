@@ -58,15 +58,17 @@ class App:
     def send_message_all(self, message):
         # Default message
         lsl_time = local_clock()
-        formatted_message = f"{message}"
-        u_time = time.time()
-        print('lsl time', lsl_time, 'unix_time', time.time())
-        # Send message through LSL
-        self.outlet.push_sample([formatted_message])
+        u_time = time.time_ns()
+        formatted_message = f"{message} - lsl:{lsl_time}"
+
+        print('lsl time', lsl_time, 'unix_time', u_time)
 
         for handler in self.handlers:
-            task = asyncio.run_coroutine_threadsafe(handler.send_message(formatted_message, lsl_time, u_time), self.loop)
+            task = asyncio.run_coroutine_threadsafe(handler.send_message(formatted_message, u_time), self.loop)
             self.tasks.append(task)
+
+        # Send message through LSL
+        self.outlet.push_sample([formatted_message])
 
     def heartbeat(self):
         # This function sends a heartbeat message to all devices every 10 seconds
