@@ -1,5 +1,6 @@
 # Pupil Labs Device Manager with LSL Integration
 This project provides an interface to discover and control Pupil Labs devices using their Realtime API. It is built with Python's Tkinter for the user interface, asyncio for managing the asynchronous communication with the devices, and LSL for streaming timestamps and messages to EEG systems.
+
 ## Features
 - Discover Pupil Labs devices on the network
 - Start/Stop recording on each individual device
@@ -14,7 +15,6 @@ These instructions will get you a copy of the project up and running on your loc
 - Python 3.10+
 - Pupil Labs Realtime API package (pip install pupil_labs)
 - pylsl (`pip install pylsl`)
-
 
 ## Usage
 - Start the application and click on the "Discover Devices" button to discover the Pupil Labs devices in the network.
