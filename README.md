@@ -7,7 +7,12 @@ This project provides an interface to discover and control Pupil Labs devices us
 - Start/Stop recording on all devices simultaneously
 - Send a message to all devices
 - Stream timestamps and messages to EEG systems via LSL
-
+- Each new start of the programe create a new files to log the message sent
+- Save all messages in the following columns: U_TIME, LSL_TIME, HUMAN_TIME, MESSAGE
+    - U_TIME: unix in nanosecond using time.time_ns() 
+    - LSL_TIME: lsl time using local_clock()
+    - HUMAN_TIME: human readable time in the following format: %H:%M:%S:%f
+    - MESSAGE: only the message string like H or the custom text 
 ## Getting Started
 These instructions will get you a copy of the project up and running on your local machine.
 
