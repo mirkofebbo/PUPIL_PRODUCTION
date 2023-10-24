@@ -11,12 +11,17 @@ import os
 import json
 from datetime import datetime
 from pylsl import StreamInfo, StreamOutlet
+from P300Test import P300Test
+import concurrent.futures
+import pygame
+import random
+import numpy as np
 
 class App:
 
     def __init__(self, root, loop):
-    
         self.root = root
+        self.root.protocol("WM_DELETE_WINDOW", self.close)
         self.handlers = []
         self.loop = loop
         self.device_frame = tk.Frame(self.root)
@@ -27,6 +32,7 @@ class App:
         info = StreamInfo('TABARNAK V3', 'Markers', 1, 0, 'string', 'myuidw43536')
         self.outlet = StreamOutlet(info)
 
+        # Button and functionality
         self.navbar_frame = tk.Frame(self.root)
         self.navbar_frame.pack(fill=tk.X)
 
@@ -53,15 +59,110 @@ class App:
 
         self.custom_input.bind('<Return>', lambda _: send_and_clear())
         
+        #Start heartbeat and log on the threads 
         self.heartbeat()
-        self.tasks = []
+        self.tasks = [] # log the current threads
+
+        # P300 
+          
+        self.p300_test_button = tk.Button(self.navbar_frame, text="Start P300 Test", command=self.trigger_p300_test)
+        self.p300_test_button.pack(side=tk.LEFT)
+        self.is_p300_running = False
+
+    # 
+    async def run_p300_test(self):
+        # Use default loop's ThreadPoolExecutor.
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            await loop.run_in_executor(pool, self.p300_sound_play)
+
+    async def start_p300_test(self):
+        await self.run_p300_test()
+
+    def stop_p300_test(self):
+        self.is_p300_running = False
+
+    def trigger_p300_test(self):
+        if self.p300_test_button.cget("text") == "Start P300 Test":
+            self.is_p300_running = True 
+            asyncio.run_coroutine_threadsafe(self.start_p300_test(), self.loop)
+            self.p300_test_button.config(text="Stop P300 Test")
+        else:
+            self.is_p300_running = False  
+            self.stop_p300_test()
+            self.p300_test_button.config(text="Start P300 Test")
 
 
+    #==== P300 ====
+    def p300_sound_play(self):
+        
+        # Initialize Pygame
+        pygame.init()
+
+        # Constants
+        total_tones = 300
+        tone_duration_ms = 200
+        interval_ms = 800
+        tones_ratio = [0.8, 0.2]
+        first_tone_frequency = 1200
+        second_tone_frequency = 1000
+
+        # Create a list of tones based on the ratio
+        tones = [first_tone_frequency] * int(total_tones * tones_ratio[0])
+        tones += [second_tone_frequency] * int(total_tones * tones_ratio[1])
+
+        # Shuffle the list of tones randomly
+        random.shuffle(tones)
+
+        # Ensure that two consecutive 1000Hz tones are avoided
+        for i in range(1, len(tones)):
+            if tones[i] == second_tone_frequency and tones[i - 1] == second_tone_frequency:
+                # Swap the tone with the next one to break the sequence
+                tones[i], tones[i + 1] = tones[i + 1], tones[i]
+
+        # Initialize Pygame mixer
+        pygame.mixer.init()
+
+        # Play the tones
+        for frequency in tones:
+            if not self.is_p300_running:
+                break
+            message = f"freq: {frequency}"
+            u_time = time.time_ns()
+            self.send_message_all(message, u_time)
+            # Push the LSL trigger with the tone frequency
+            # Create the audio waveform using numpy
+            sample_rate = 44100  # Adjust as needed
+            t = np.arange(0, tone_duration_ms / 1000.0, 1.0 / sample_rate)
+            audio_waveform = np.sin(2 * np.pi * frequency * t)
+
+            # Convert to 16-bit signed integers
+            audio_waveform = (audio_waveform * 32767.0).astype(np.int16)
+
+            # Make it 2-dimensional (mono)
+            audio_waveform = np.column_stack((audio_waveform, audio_waveform))
+
+            # Create a Pygame sound object
+            sound = pygame.sndarray.make_sound(audio_waveform)
+
+            # Play the sound
+            sound.play()
+
+            # Wait for the tone to finish playing
+            pygame.time.delay(tone_duration_ms)
+
+            # Wait for the interval (800 milliseconds) before the next tone
+            pygame.time.delay(interval_ms)
+
+
+        # Quit Pygame
+        pygame.quit()
+        
     #==== SENDING MESSAGE ====
     def send_message_all(self, message, u_time):
         # Default message
         formatted_message = f"{message}"
-
+        print(message)
         # Send message through LSL
         self.outlet.push_sample([formatted_message])
 
@@ -174,6 +275,7 @@ class App:
 
             
     def close(self):
+        self.is_running = False
         # Cancel the heartbeat function
         self.root.after_cancel(self.heartbeat_id)
 
