@@ -1,4 +1,5 @@
 pupil_labs
+pygame
 pylsl
 tkinter  # Note: tkinter is part of the Python standard library and may not need to be installed via pip
 asyncio  # Note: asyncio is part of the Python standard library for Python 3.7+ and may not need to be installed via pip
