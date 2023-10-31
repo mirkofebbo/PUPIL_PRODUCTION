@@ -16,4 +16,5 @@ if __name__ == "__main__":
     app = App(root, loop)
     threading.Thread(target=loop.run_forever, daemon=True).start()
     root.protocol("WM_DELETE_WINDOW", app.close)
+
     root.mainloop()

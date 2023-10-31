@@ -58,6 +58,7 @@ class DeviceHandler:
             return
         await self.device.recording_stop_and_save()
         await asyncio.sleep(2)  # wait for confirmation via auto-update
+        print(f"STOPED RECORDING FOR: {self.dev_info['name']}")
 
     async def send_message(self, message, u_time):
         if not self.connected:
@@ -74,6 +75,7 @@ class DeviceHandler:
         except:
             print(self.status.phone.device_name, ' Not found')
 
-    @staticmethod
-    def print_recording(status):
-        print("Recording: ", status.recording.rec_duration_ns)
+    # problem line? AttributeError: 'Phone' object has no attribute 'recording'
+    # @staticmethod
+    # def print_recording(status):
+    #     print("Recording: ", status.recording.rec_duration_ns)

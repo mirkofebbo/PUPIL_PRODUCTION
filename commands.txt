@@ -1,0 +1,2 @@
+lsl-relay -p "type:'EEG'"
+--kepp-orig-timestamps     // for the one that is runing the EEgo software 
