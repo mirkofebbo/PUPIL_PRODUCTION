@@ -13,15 +13,16 @@ from pylsl import StreamInfo, StreamOutlet, local_clock
 # P300
 from p300 import P300Test
 import concurrent.futures
-import pygame
-import random
-import numpy as np
+
+# BLUE BALLS 
+from jamie import Talker
 
 file_name = 'TEST_'
+
 class App:
 
     def __init__(self, root, loop):
-    
+
         self.root = root
         self.handlers = []
         self.loop = loop
@@ -72,6 +73,7 @@ class App:
         self.p300_test_button = tk.Button(self.navbar_frame, text="Start P300 Test", command=self.toggle_p300_test)
         self.p300_test_button.pack(side=tk.LEFT)
 
+        
     # ==== P300 TEST ====
     def toggle_p300_test(self):
         if self.p300_test_button.cget("text") == "Start P300 Test":
@@ -97,13 +99,18 @@ class App:
         formatted_message = f"{message}_t:{u_time}_lsl:{lsl_time}_ht:{human_time}" # Add LSL time and unix time to the message
 
         print(formatted_message)
-
+        
         for handler in self.handlers:
             task = asyncio.run_coroutine_threadsafe(handler.send_message(formatted_message, u_time), self.loop)
             self.tasks.append(task)
 
         # Send message through LSL
         self.outlet.push_sample([formatted_message])
+        # BLUE BALLS 
+        blue_balls = Talker()
+        blue_balls.send(f'log("{formatted_message}")')
+        blue_balls.close()
+
         self.write_to_csv(u_time, lsl_time, human_time, message)
 
     def heartbeat(self):
@@ -150,20 +157,21 @@ class App:
     async def discover_devices(self):
         # Use Pupil Labs API to discover devices
         async with Network() as network:
-            try:
-                dev_info = await asyncio.wait_for(network.wait_for_new_device(), timeout=5)
-                # Check if device already exists in handlers list using the name
-                print(dev_info.name)
+            # loop to search for devices
+            while True:
+                try:
+                    dev_info = await asyncio.wait_for(network.wait_for_new_device(), timeout=5)
+                    # Check if device already exists in handlers list using the name
 
-                if not any(handler.dev_info.name == dev_info.name for handler in self.handlers):
-                    handler = DeviceHandler(dev_info)
-                    await handler.init_device()  # Initialize the device
-                    handler.is_recording = False  # Add a state variable to handler
-                    self.handlers.append(handler)
+                    if not any(handler.dev_info.name == dev_info.name for handler in self.handlers):
+                        handler = DeviceHandler(dev_info)
+                        await handler.init_device()  # Initialize the device
+                        handler.is_recording = False  # Add a state variable to handler
+                        self.handlers.append(handler)
 
-            except asyncio.TimeoutError:
-                # no more devices to be found, break the loop
-                print("No devices found within the timeout period!")
+                except asyncio.TimeoutError:
+                    # no more devices to be found, break the loop
+                    break
 
         # If no devices found, create a label and return
         if not self.handlers:

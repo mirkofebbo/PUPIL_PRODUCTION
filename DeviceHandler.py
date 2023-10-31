@@ -76,6 +76,6 @@ class DeviceHandler:
             print(self.status.phone.device_name, ' Not found')
 
     # problem line? AttributeError: 'Phone' object has no attribute 'recording'
-    # @staticmethod
-    # def print_recording(status):
-    #     print("Recording: ", status.recording.rec_duration_ns)
+    @staticmethod
+    def print_recording(status):
+        print("Recording: ", status.recording.rec_duration_ns)
