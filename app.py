@@ -12,8 +12,10 @@ from datetime import datetime
 from pylsl import StreamInfo, StreamOutlet, local_clock
 # P300
 from p300 import P300Test
+from fakeP300 import FakeP300Test
 import concurrent.futures
-
+# Transition beep 
+from TransitionBeep import TransitionBeep
 # BLUE BALLS 
 from jamie import Talker
 
@@ -69,11 +71,49 @@ class App:
         self.tasks = [] # List of tasks to cancel on close
 
         # P300 
-        self.p300 = P300Test()
+        self.p300 = P300Test(tone_callback=self.on_tone_played)
         self.p300_test_button = tk.Button(self.navbar_frame, text="Start P300 Test", command=self.toggle_p300_test)
         self.p300_test_button.pack(side=tk.LEFT)
 
-        
+        # Fake P300 
+        self.fake_p300 = FakeP300Test(tone_callback=self.on_fake_tone_played)
+        self.fake_p300_test_button = tk.Button(self.navbar_frame, text="Start Fake P300 Test", command=self.toggle_fake_p300_test)
+        self.fake_p300_test_button.pack(side=tk.LEFT)
+        # Transition Beep
+        self.transition_beep = TransitionBeep(beep_callback=self.on_beep_played)
+        self.transition_beep_button = tk.Button(self.navbar_frame, text="Start Transition Beep", 
+                                                command=self.toggle_transition_beep)
+        self.transition_beep_button.pack(side=tk.LEFT)
+    
+    # ==== TRANSITION BEEP ====
+    def toggle_transition_beep(self):
+        if self.transition_beep_button.cget("text") == "Start Transition Beep":
+            # Run the TransitionBeep start function in a thread pool
+            self.loop.run_in_executor(concurrent.futures.ThreadPoolExecutor(), self.transition_beep.start)
+            self.transition_beep_button.config(text="Stop Transition Beep")
+        else:
+            self.transition_beep.stop()
+            self.transition_beep_button.config(text="Start Transition Beep")
+
+    def on_beep_played(self, frequency):
+        # Callback function when we have a new beep
+        message = f"trans:{frequency}"
+        self.send_message_all(message)
+
+    # ==== FAKE P300 TEST ====
+    def toggle_fake_p300_test(self):
+        if self.fake_p300_test_button.cget("text") == "Start Fake P300 Test":
+            # Run the P300 start function in a thread pool
+            self.loop.run_in_executor(concurrent.futures.ThreadPoolExecutor(), self.fake_p300.start)
+            self.fake_p300_test_button.config(text="Stop Fake P300 Test")
+        else:
+            self.fake_p300.stop()
+            self.fake_p300_test_button.config(text="Stop Fake P300 Test")
+
+    def on_fake_tone_played(self, frequency):
+        # Call back function when we have a new beep
+        message = f"freq:{frequency}"
+        self.send_message_all(message)
     # ==== P300 TEST ====
     def toggle_p300_test(self):
         if self.p300_test_button.cget("text") == "Start P300 Test":
@@ -84,6 +124,10 @@ class App:
             self.p300.stop()
             self.p300_test_button.config(text="Start P300 Test")
 
+    def on_tone_played(self, frequency):
+        # Call back function when we have a new beep
+        message = f"freq:{frequency}"
+        self.send_message_all(message)
    
     #==== SENDING MESSAGE ====
     def send_message_all(self, message):
@@ -107,9 +151,9 @@ class App:
         # Send message through LSL
         self.outlet.push_sample([formatted_message])
         # BLUE BALLS 
-        blue_balls = Talker()
-        blue_balls.send(f'log("{formatted_message}")')
-        blue_balls.close()
+        # blue_balls = Talker()
+        # blue_balls.send(f'log("{formatted_message}")')
+        # blue_balls.close()
 
         self.write_to_csv(u_time, lsl_time, human_time, message)
 
@@ -245,6 +289,7 @@ class App:
             self.csv_file_is_open = False
   
     def close(self):
+        self.p300.stop()
         # Cancel the heartbeat function
         self.root.after_cancel(self.heartbeat_id)
         # Cancel all tasks

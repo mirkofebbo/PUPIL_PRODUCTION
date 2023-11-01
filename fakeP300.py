@@ -1,37 +1,28 @@
 import pygame
 import random
 import numpy as np
-
-class P300Test:
+#30 sec beep -> 40 sec gap -> 1m beep -> 30 sec gap-> beep until stoped
+class FakeP300Test:
     def __init__(self, tone_callback=None):
         pygame.init()
 
         # Constants
-        self.total_tones = 300
         self.tone_duration_ms = 200
         self.interval_ms = 800
-        self.tones_ratio = [0.8, 0.2]
         self.first_tone_frequency = 1200
-        self.second_tone_frequency = 1000
         self.running = False
         self.tone_callback = tone_callback
+
+        # Calculate total tones within 30 seconds
+        single_tone_time = self.tone_duration_ms + self.interval_ms
+        self.total_tones = int(30000 / single_tone_time) 
         
         self.setup_tones()
 
 
     def setup_tones(self):
-        # Create a list of tones based on the ratio
-        self.tones = [self.first_tone_frequency] * int(self.total_tones * self.tones_ratio[0])
-        self.tones += [self.second_tone_frequency] * int(self.total_tones * self.tones_ratio[1])
-
-        # Shuffle the list of tones randomly
-        random.shuffle(self.tones)
-
-        # Ensure that two consecutive 1000Hz tones are avoided
-        for i in range(1, len(self.tones)):
-            if self.tones[i] == self.second_tone_frequency and self.tones[i - 1] == self.second_tone_frequency:
-                # Swap the tone with the next one to break the sequence
-                self.tones[i], self.tones[i + 1] = self.tones[i + 1], self.tones[i]
+        # Create a list of tones that consist only of the first tone frequency
+        self.tones = [self.first_tone_frequency] * self.total_tones
 
     def play_tone(self, frequency):
         # push the frequency to the callback function to be sent to all devices
@@ -71,10 +62,32 @@ class P300Test:
         self.running = False
 
     def run(self):
-        for frequency in self.tones:
-            if not self.running:  # Stop the test if running flag is False
+        while self.running:
+            # 30 seconds of beeping
+            start_time = pygame.time.get_ticks()
+            while pygame.time.get_ticks() - start_time < 30000 and self.running:
+                self.play_tone(self.first_tone_frequency)
+            
+            if not self.running:
                 break
-            self.play_tone(frequency)
+            
+            # 40 seconds gap
+            pygame.time.delay(40000)
+            
+            # 1 minute of beeping
+            start_time = pygame.time.get_ticks()
+            while pygame.time.get_ticks() - start_time < 60000 and self.running:
+                self.play_tone(self.first_tone_frequency)
+            
+            if not self.running:
+                break
+            
+            # 30 seconds gap
+            pygame.time.delay(30000)
+            
+            # Beep continuously until stopped
+            while self.running:
+                self.play_tone(self.first_tone_frequency)
 
         # Quit Pygame
         pygame.quit()
