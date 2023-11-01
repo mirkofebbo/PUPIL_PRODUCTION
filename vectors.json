@@ -1,0 +1,86 @@
+{
+    "vector_1": {
+        "vector" : 1,
+        "transition" : true,
+        "name": "Index of Time and Change",
+        "people": [],
+        "duration": 360000
+    },
+    "vector_2": {
+        "vector" : 2,
+        "transition" : true,
+        "name": "Index of Breathing",
+        "people": ["Siin", "Nathaniel", "Matthias", "Ben"],
+        "duration": 90000
+    },
+    "vector_3": {
+        "vector" : 3,
+        "transition" : true,
+        "name": "Spectrum of Sight",
+        "people": ["Siin", "Nathaniel", "Matthias", "Heni", "Rachel"],
+        "duration": 90000
+    },
+    "vector_4": {
+        "vector" : 4,
+        "transition" : true,
+        "name": "Spectrum of Sounding",
+        "people": [],
+        "duration": 90000
+    },
+    "vector_5.1": {
+        "vector" : 5.1,
+        "transition" : true,
+        "name": "Index of Touching: Sites of Connection",
+        "people": [],
+        "duration": 120000
+    },
+    "vector_6.1": {
+        "vector" : 6.1,
+        "transition" : true,
+        "name": "Index of Composition",
+        "people": ["Siin", "Rachel"],
+        "duration": 90000
+    },
+    "vector_7": {
+        "vector" : 7,
+        "transition" : true,
+        "name": "Relational Compound [EEG sonification condition A - Abdominal Tango]",
+        "people": [],
+        "duration": 150000
+    },
+    "vector_5.2": {
+        "vector" : 5.2,
+        "transition" : true,
+        "name": "Index of Touching: Materiality (with audience handling slime)",
+        "people": [],
+        "duration": "open"
+    },
+    "vector_7 repeat": {
+        "vector" : 7,
+        "transition" : true,
+        "name": "Relational Compound [EEG sonification B - Abdominal Tango]",
+        "people": [],
+        "duration": 150000
+    },
+    "vector_6.2": {
+        "vector" : 6.2,
+        "transition" : true,
+        "name": "Index of Composition",
+        "people": [],
+        "duration": 90000
+    },
+    "vector_5.3": {
+        "vector" : 5.3,
+        "transition" : true,
+        "name": "Index of Touching: Squeezy Balls",
+        "people": [],
+        "duration": 30000
+    },
+    "vector_8": {
+        "vector" : 8,
+        "transition" : false,
+        "name": "Single Compound",
+        "people": [],
+        "duration": 120000
+    }
+}

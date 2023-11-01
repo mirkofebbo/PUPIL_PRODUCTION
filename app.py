@@ -4,6 +4,7 @@ from tkinter import ttk
 from pupil_labs.realtime_api import Device, Network
 from DeviceHandler import DeviceHandler
 import time
+import json
 # Data loging
 import csv
 import os
@@ -51,6 +52,20 @@ class App:
                                         command=self.toggle_recording_all)
         self.start_all_button.pack(side=tk.LEFT)  
         
+
+        # SECTION
+        f = open('vectors.json')
+        self.sections = json.load(f)
+        # Init current section index and load sections
+        self.current_section_index = 0
+        self.section_state = "STOPPED"
+        self.sections = list(self.sections.values())
+
+        # Add the section toggle button in navbar_frame
+        self.toggle_section_button = tk.Button(self.navbar_frame, text="Start " + self.sections[self.current_section_index]["name"], 
+                                               command=self.toggle_section)
+        self.toggle_section_button.pack(side=tk.LEFT)
+
         self.custom_frame = tk.Frame(self.root)  
         self.custom_frame.pack(fill=tk.X) 
 
@@ -66,38 +81,83 @@ class App:
         self.custom_button.pack(side=tk.LEFT)  
 
         self.custom_input.bind('<Return>', lambda _: send_and_clear()) # Bind the enter key to the send button
-        # Start the heartbeat function
-        self.heartbeat()
-        self.tasks = [] # List of tasks to cancel on close
+        
+        # Add timers next to custom input
+        self.start_time = time.time()
+        self.button_timer = None
 
-        # P300 
+        self.total_time_label = tk.Label(self.custom_frame, text="HH:MM:SS")
+        self.total_time_label.pack(side=tk.LEFT)
+
+        self.sound_time_label = tk.Label(self.custom_frame, text="MM:SS")
+        self.sound_time_label.pack(side=tk.LEFT, padx=(10, 0))
+        
+        # Sound-related elements frame
+        self.sound_frame = tk.Frame(self.root)
+        self.sound_frame.pack(fill=tk.X)
+
+        # P300
         self.p300 = P300Test(tone_callback=self.on_tone_played)
-        self.p300_test_button = tk.Button(self.navbar_frame, text="Start P300 Test", command=self.toggle_p300_test)
+        self.p300_test_button = tk.Button(self.sound_frame, text="Start P300 Test", command=self.toggle_p300_test)
         self.p300_test_button.pack(side=tk.LEFT)
 
-        # Fake P300 
+        # Fake P300
         self.fake_p300 = FakeP300Test(tone_callback=self.on_fake_tone_played)
-        self.fake_p300_test_button = tk.Button(self.navbar_frame, text="Start Fake P300 Test", command=self.toggle_fake_p300_test)
+        self.fake_p300_test_button = tk.Button(self.sound_frame, text="Start Fake P300 Test", command=self.toggle_fake_p300_test)
         self.fake_p300_test_button.pack(side=tk.LEFT)
+
         # Transition Beep
         self.transition_beep = TransitionBeep(beep_callback=self.on_beep_played)
-        self.transition_beep_button = tk.Button(self.navbar_frame, text="Start Transition Beep", 
+        self.transition_beep_button = tk.Button(self.sound_frame, text="Start Transition Beep", 
                                                 command=self.toggle_transition_beep)
         self.transition_beep_button.pack(side=tk.LEFT)
-    
+
+        # Start the heartbeat function
+        self.heartbeat()
+        self.tasks = []  # List of tasks to cancel on close
+        
+        # Start timers
+        self.update_timers()
+    # ==== SECTION ====
+
+    def toggle_section(self):
+        current_section = self.sections[self.current_section_index]
+
+        if self.section_state == "STOPPED":
+            # Start the section
+            self.section_state = "STARTED"
+            self.toggle_section_button.config(text="Stop " + current_section["name"])
+            self.button_timer = time.time()
+            # ... Other logic related to starting the section
+        else:
+            # Stop the section
+            self.section_state = "STOPPED"
+            
+            # Increase the current section index (with wrap-around)
+            self.current_section_index = (self.current_section_index + 1) % len(self.sections)
+            current_section = self.sections[self.current_section_index]
+            
+            self.toggle_section_button.config(text="Start " + current_section["name"])
+            self.button_timer = None
+            # ... Other logic related to stopping the section
+
+        print(current_section["name"]) 
+
     # ==== TRANSITION BEEP ====
     def toggle_transition_beep(self):
         if self.transition_beep_button.cget("text") == "Start Transition Beep":
             # Run the TransitionBeep start function in a thread pool
             self.loop.run_in_executor(concurrent.futures.ThreadPoolExecutor(), self.transition_beep.start)
             self.transition_beep_button.config(text="Stop Transition Beep")
+            self.button_timer = time.time()
         else:
             self.transition_beep.stop()
             self.transition_beep_button.config(text="Start Transition Beep")
+            self.button_timer = None
 
     def on_beep_played(self, frequency):
         # Callback function when we have a new beep
-        message = f"trans:{frequency}"
+        message = f"TRANS:{frequency}"
         self.send_message_all(message)
 
     # ==== FAKE P300 TEST ====
@@ -106,29 +166,51 @@ class App:
             # Run the P300 start function in a thread pool
             self.loop.run_in_executor(concurrent.futures.ThreadPoolExecutor(), self.fake_p300.start)
             self.fake_p300_test_button.config(text="Stop Fake P300 Test")
+            self.button_timer = time.time()
         else:
             self.fake_p300.stop()
             self.fake_p300_test_button.config(text="Stop Fake P300 Test")
+            self.button_timer = None
 
     def on_fake_tone_played(self, frequency):
         # Call back function when we have a new beep
         message = f"freq:{frequency}"
         self.send_message_all(message)
+
     # ==== P300 TEST ====
     def toggle_p300_test(self):
         if self.p300_test_button.cget("text") == "Start P300 Test":
             # Run the P300 start function in a thread pool
             self.loop.run_in_executor(concurrent.futures.ThreadPoolExecutor(), self.p300.start)
             self.p300_test_button.config(text="Stop P300 Test")
+            self.button_timer = time.time()
         else:
             self.p300.stop()
             self.p300_test_button.config(text="Start P300 Test")
+            self.button_timer = None
 
     def on_tone_played(self, frequency):
         # Call back function when we have a new beep
         message = f"freq:{frequency}"
         self.send_message_all(message)
-   
+
+    # ==== TIMER ====
+    def update_timers(self):
+        # Update the total time since program started
+        elapsed_total = time.time() - self.start_time
+        hours, remainder = divmod(elapsed_total, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        self.total_time_label.config(text="{:02}:{:02}:{:02}".format(int(hours), int(minutes), int(seconds)))
+
+        # Update the time since the sound button was pressed
+        if self.button_timer:
+            elapsed_sound = time.time() - self.button_timer
+            minutes, seconds = divmod(elapsed_sound, 60)
+            self.sound_time_label.config(text="{:02}:{:02}".format(int(minutes), int(seconds)))
+
+        # Call this method again after 1000ms (1 second)
+        self.root.after(1000, self.update_timers)
+
     #==== SENDING MESSAGE ====
     def send_message_all(self, message):
         # Default message setup
@@ -140,7 +222,7 @@ class App:
         dt_object = datetime.fromtimestamp(u_time_s) # Convert unix time to human readable time 
         human_time = dt_object.strftime('%H:%M:%S:%f')     
 
-        formatted_message = f"{message}_t:{u_time}_lsl:{lsl_time}_ht:{human_time}" # Add LSL time and unix time to the message
+        formatted_message = f"{message}_T:{u_time}_LSL:{lsl_time}_HT:{human_time}" # Add LSL time and unix time to the message
 
         print(formatted_message)
         

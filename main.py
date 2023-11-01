@@ -2,7 +2,7 @@ import tkinter as tk
 import asyncio
 import threading
 from app import App
-
+# some have open time some I need to stop myself
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("TABARNAK V3")
