@@ -4,9 +4,10 @@ import numpy as np
 
 class TransitionBeep:
     
-    def __init__(self, beep_callback=None):
+    def __init__(self, beep_callback=None, sequence_complete_callback=None):
         pygame.init()
         self.beep_callback = beep_callback
+        self.sequence_complete_callback = sequence_complete_callback  # Callback for when the sequence is completed
         self.first_tone_frequency = 1600  # Quick beep frequency
         self.second_tone_frequency = 900  # Long beep frequency
         self.running = False
@@ -19,7 +20,8 @@ class TransitionBeep:
             pygame.time.delay(1000)  # 1-second delay
         if self.running:
             self.play_tone_special(self.second_tone_frequency, 1000)  # Longer beep
-
+            if self.sequence_complete_callback:  # Check if a callback function has been provided
+                self.sequence_complete_callback()  # Invoke the callback
 
     def play_tone_special(self, frequency, duration_ms):
         # Push the frequency to the callback function to be sent to all devices

@@ -37,7 +37,7 @@ class App:
         self.init_csv_writer()
 
         # Create LSL stream
-        info = StreamInfo('TABARNAK V3', 'Markers', 1, 0, 'string', 'myuidw43536')
+        info = StreamInfo('TABARNAK V3', 'Markers', 1, 0, 'string', '80085')
         self.outlet = StreamOutlet(info)
 
         # Create a frame for the navbar
@@ -107,7 +107,7 @@ class App:
         self.fake_p300_test_button.pack(side=tk.LEFT)
 
         # Transition Beep
-        self.transition_beep = TransitionBeep(beep_callback=self.on_beep_played)
+        self.transition_beep = TransitionBeep(beep_callback=self.on_beep_played, sequence_complete_callback=self.on_transition_complete)
         self.transition_beep_button = tk.Button(self.sound_frame, text="Start Transition Beep", 
                                                 command=self.toggle_transition_beep)
         self.transition_beep_button.pack(side=tk.LEFT)
@@ -125,24 +125,38 @@ class App:
 
         if self.section_state == "STOPPED":
             # Start the section
+            u_time = time.time_ns()
+            print(u_time)
             self.section_state = "STARTED"
+            message = f"VECTOR{current_section['vector']} STARTED"
+            self.send_message_all(message)
             self.toggle_section_button.config(text="Stop " + current_section["name"])
             self.button_timer = time.time()
-            # ... Other logic related to starting the section
+            
+            # Schedule the section to automatically stop after the specified duration
+            duration_ms = current_section["duration"]
+            self.root.after(duration_ms, self.auto_stop_section)
         else:
             # Stop the section
-            self.section_state = "STOPPED"
-            
-            # Increase the current section index (with wrap-around)
-            self.current_section_index = (self.current_section_index + 1) % len(self.sections)
-            current_section = self.sections[self.current_section_index]
-            
-            self.toggle_section_button.config(text="Start " + current_section["name"])
-            self.button_timer = None
-            # ... Other logic related to stopping the section
+            self.stop_section_logic()
 
-        print(current_section["name"]) 
+    def stop_section_logic(self):
+        current_section = self.sections[self.current_section_index]
+        
+        self.section_state = "STOPPED"
+        message = f"{current_section['name']} STOPPED"
+        self.send_message_all(message)
+        # Increase the current section index (with wrap-around)
+        self.current_section_index = (self.current_section_index + 1) % len(self.sections)
+        current_section = self.sections[self.current_section_index]
+        
+        self.toggle_section_button.config(text="Start " + current_section["name"])
+        self.button_timer = None
+        # ... Other logic related to stopping the section
 
+    def auto_stop_section(self):
+        if self.section_state == "STARTED":  # Check to make sure the section is still running
+            self.stop_section_logic()           
     # ==== TRANSITION BEEP ====
     def toggle_transition_beep(self):
         if self.transition_beep_button.cget("text") == "Start Transition Beep":
@@ -160,6 +174,10 @@ class App:
         message = f"TRANS:{frequency}"
         self.send_message_all(message)
 
+    def on_transition_complete(self):
+        self.transition_beep_button.config(text="Start Transition Beep")
+        print("Transition beep sequence completed!")
+
     # ==== FAKE P300 TEST ====
     def toggle_fake_p300_test(self):
         if self.fake_p300_test_button.cget("text") == "Start Fake P300 Test":
@@ -174,7 +192,7 @@ class App:
 
     def on_fake_tone_played(self, frequency):
         # Call back function when we have a new beep
-        message = f"freq:{frequency}"
+        message = f"FAKE:{frequency}"
         self.send_message_all(message)
 
     # ==== P300 TEST ====
@@ -191,7 +209,7 @@ class App:
 
     def on_tone_played(self, frequency):
         # Call back function when we have a new beep
-        message = f"freq:{frequency}"
+        message = f"P300:{frequency}"
         self.send_message_all(message)
 
     # ==== TIMER ====
@@ -222,7 +240,7 @@ class App:
         dt_object = datetime.fromtimestamp(u_time_s) # Convert unix time to human readable time 
         human_time = dt_object.strftime('%H:%M:%S:%f')     
 
-        formatted_message = f"{message}_T:{u_time}_LSL:{lsl_time}_HT:{human_time}" # Add LSL time and unix time to the message
+        formatted_message = f"{message} T:{u_time} LSL:{lsl_time} HT:{human_time}" # Add LSL time and unix time to the message
 
         print(formatted_message)
         
@@ -372,6 +390,8 @@ class App:
   
     def close(self):
         self.p300.stop()
+        self.fake_p300.stop()
+        self.transition_beep.stop()
         # Cancel the heartbeat function
         self.root.after_cancel(self.heartbeat_id)
         # Cancel all tasks
