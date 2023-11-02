@@ -1,10 +1,17 @@
-{
+{    
+    "vector_0": {
+        "vector" : 0,
+        "transition" : false,
+        "name": "Fake P300",
+        "people": [],
+        "duration": "open"
+    },
     "vector_1": {
         "vector" : 1,
-        "transition" : true,
+        "transition" : false,
         "name": "Index of Time and Change",
         "people": [],
-        "duration": 10000
+        "duration": "open"
     },
     "vector_2": {
         "vector" : 2,
@@ -25,13 +32,13 @@
         "transition" : true,
         "name": "Spectrum of Sounding",
         "people": [],
-        "duration": 90000
+        "duration": "open"
     },
     "vector_5.1": {
         "vector" : 5.1,
         "transition" : true,
         "name": "Index of Touching: Sites of Connection",
-        "people": [],
+        "people": "",
         "duration": 120000
     },
     "vector_6.1": {
@@ -45,42 +52,42 @@
         "vector" : 7,
         "transition" : true,
         "name": "Relational Compound [EEG sonification condition A - Abdominal Tango]",
-        "people": [],
+        "people": "Ben Matthias",
         "duration": 150000
     },
     "vector_5.2": {
         "vector" : 5.2,
         "transition" : true,
         "name": "Index of Touching: Materiality (with audience handling slime)",
-        "people": [],
+        "people": "Rachel Ben",
         "duration": "open"
     },
     "vector_7 repeat": {
         "vector" : 7,
         "transition" : true,
         "name": "Relational Compound [EEG sonification B - Abdominal Tango]",
-        "people": [],
+        "people": "Heni Siin",
         "duration": 150000
     },
     "vector_6.2": {
         "vector" : 6.2,
         "transition" : true,
         "name": "Index of Composition",
-        "people": [],
+        "people": "Nathaniel",
         "duration": 90000
     },
     "vector_5.3": {
         "vector" : 5.3,
         "transition" : true,
         "name": "Index of Touching: Squeezy Balls",
-        "people": [],
+        "people": "",
         "duration": 30000
     },
     "vector_8": {
         "vector" : 8,
         "transition" : false,
         "name": "Single Compound",
-        "people": [],
+        "people": "",
         "duration": 120000
     }
 }

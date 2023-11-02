@@ -41,6 +41,7 @@ class App:
         self.outlet = StreamOutlet(info)
 
         # Create a frame for the navbar
+        # PUPIL LAB DEVICES SETUP 
         self.navbar_frame = tk.Frame(self.root)
         self.navbar_frame.pack(fill=tk.X)
 
@@ -53,7 +54,7 @@ class App:
         self.start_all_button.pack(side=tk.LEFT)  
         
 
-        # SECTION
+        # LOAD SECTION DATA
         f = open('vectors.json')
         self.sections = json.load(f)
         # Init current section index and load sections
@@ -61,14 +62,15 @@ class App:
         self.section_state = "STOPPED"
         self.sections = list(self.sections.values())
 
-        # Add the section toggle button in navbar_frame
-        self.toggle_section_button = tk.Button(self.navbar_frame, text="Start " + self.sections[self.current_section_index]["name"], 
-                                               command=self.toggle_section)
-        self.toggle_section_button.pack(side=tk.LEFT)
-
+        # CUSTOM MESSAGE WITH TIME 
         self.custom_frame = tk.Frame(self.root)  
         self.custom_frame.pack(fill=tk.X) 
+        # Add timers next to custom input
+        self.start_time = time.time()
+        self.button_timer = None
 
+        self.total_time_label = tk.Label(self.custom_frame, text="HH:MM:SS")
+        self.total_time_label.pack(side=tk.LEFT)
         self.custom_input = tk.Entry(self.custom_frame)
         self.custom_input.pack(side=tk.LEFT)
         
@@ -79,20 +81,26 @@ class App:
 
         self.custom_button = tk.Button(self.custom_frame, text="SEND", command=send_and_clear)
         self.custom_button.pack(side=tk.LEFT)  
-
         self.custom_input.bind('<Return>', lambda _: send_and_clear()) # Bind the enter key to the send button
         
-        # Add timers next to custom input
-        self.start_time = time.time()
-        self.button_timer = None
 
-        self.total_time_label = tk.Label(self.custom_frame, text="HH:MM:SS")
-        self.total_time_label.pack(side=tk.LEFT)
+        # TIMER AND SECTION NAVBAR
+        self.vector_frame = tk.Frame(self.root)  
+        self.vector_frame.pack(fill=tk.X) 
+        self.sound_time_label = tk.Label(self.vector_frame, text="MM:SS")
+        self.sound_time_label.pack(side=tk.LEFT)
+        self.vector_label = tk.Label(self.vector_frame, text=f'VECTOR {self.sections[0]["vector"]}')
+        self.vector_label.pack(side=tk.LEFT, padx= 10)
 
-        self.sound_time_label = tk.Label(self.custom_frame, text="MM:SS")
-        self.sound_time_label.pack(side=tk.LEFT, padx=(10, 0))
+
+        self.toggle_section_button = tk.Button(self.vector_frame, text="Start", 
+                                               command=self.toggle_section)
+        self.toggle_section_button.pack(side=tk.LEFT)
+
+        self.name_label = tk.Label(self.vector_frame, text=self.sections[0]["name"])
+        self.name_label.pack(side=tk.LEFT, padx= 2)
         
-        # Sound-related elements frame
+        # AUDIO RELATED NAVBAR
         self.sound_frame = tk.Frame(self.root)
         self.sound_frame.pack(fill=tk.X)
 
@@ -118,6 +126,7 @@ class App:
         
         # Start timers
         self.update_timers()
+
     # ==== SECTION ====
 
     def toggle_section(self):
@@ -130,12 +139,15 @@ class App:
             self.section_state = "STARTED"
             message = f"VECTOR{current_section['vector']} STARTED"
             self.send_message_all(message)
-            self.toggle_section_button.config(text="Stop " + current_section["name"])
+            self.vector_label.config(text=f'VECTOR {current_section["vector"]}')
+            self.name_label.config(text=current_section["name"])
+            self.toggle_section_button.config(text='STOP')
             self.button_timer = time.time()
             
             # Schedule the section to automatically stop after the specified duration
             duration_ms = current_section["duration"]
-            self.root.after(duration_ms, self.auto_stop_section)
+            if(duration_ms != "open"):
+                self.root.after(duration_ms, self.auto_stop_section)
         else:
             # Stop the section
             self.stop_section_logic()
@@ -149,25 +161,25 @@ class App:
         # Increase the current section index (with wrap-around)
         self.current_section_index = (self.current_section_index + 1) % len(self.sections)
         current_section = self.sections[self.current_section_index]
-        
-        self.toggle_section_button.config(text="Start " + current_section["name"])
+        self.vector_label.config(text=f'VECTOR {current_section["vector"]}')
+        self.name_label.config(text=current_section["name"])
+        self.toggle_section_button.config(text='START')
         self.button_timer = None
         # ... Other logic related to stopping the section
 
     def auto_stop_section(self):
         if self.section_state == "STARTED":  # Check to make sure the section is still running
-            self.stop_section_logic()           
+            self.stop_section_logic()    
+
     # ==== TRANSITION BEEP ====
     def toggle_transition_beep(self):
         if self.transition_beep_button.cget("text") == "Start Transition Beep":
             # Run the TransitionBeep start function in a thread pool
             self.loop.run_in_executor(concurrent.futures.ThreadPoolExecutor(), self.transition_beep.start)
             self.transition_beep_button.config(text="Stop Transition Beep")
-            self.button_timer = time.time()
         else:
             self.transition_beep.stop()
             self.transition_beep_button.config(text="Start Transition Beep")
-            self.button_timer = None
 
     def on_beep_played(self, frequency):
         # Callback function when we have a new beep
@@ -187,7 +199,7 @@ class App:
             self.button_timer = time.time()
         else:
             self.fake_p300.stop()
-            self.fake_p300_test_button.config(text="Stop Fake P300 Test")
+            self.fake_p300_test_button.config(text="Start Fake P300 Test")
             self.button_timer = None
 
     def on_fake_tone_played(self, frequency):
