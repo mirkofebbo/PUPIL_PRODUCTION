@@ -1,5 +1,6 @@
 {    
     "vector_0": {
+        "id": 0,
         "vector" : 0,
         "transition" : false,
         "name": "Fake P300",
@@ -7,6 +8,7 @@
         "duration": "open"
     },
     "vector_1": {
+        "id": 1,
         "vector" : 1,
         "transition" : false,
         "name": "Index of Time and Change",
@@ -14,6 +16,7 @@
         "duration": "open"
     },
     "vector_2": {
+        "id": 2,
         "vector" : 2,
         "transition" : true,
         "name": "Index of Breathing",
@@ -21,6 +24,7 @@
         "duration": 90000
     },
     "vector_3": {
+        "id": 3,
         "vector" : 3,
         "transition" : true,
         "name": "Spectrum of Sight",
@@ -28,6 +32,7 @@
         "duration": 90000
     },
     "vector_4": {
+        "id": 4,
         "vector" : 4,
         "transition" : true,
         "name": "Spectrum of Sounding",
@@ -35,6 +40,7 @@
         "duration": "open"
     },
     "vector_5.1": {
+        "id": 5,
         "vector" : 5.1,
         "transition" : true,
         "name": "Index of Touching: Sites of Connection",
@@ -42,6 +48,7 @@
         "duration": 120000
     },
     "vector_6.1": {
+        "id": 6,
         "vector" : 6.1,
         "transition" : true,
         "name": "Index of Composition",
@@ -49,6 +56,7 @@
         "duration": 90000
     },
     "vector_7": {
+        "id": 7,
         "vector" : 7,
         "transition" : true,
         "name": "Relational Compound [EEG sonification condition A - Abdominal Tango]",
@@ -56,6 +64,7 @@
         "duration": 150000
     },
     "vector_5.2": {
+        "id": 8,
         "vector" : 5.2,
         "transition" : true,
         "name": "Index of Touching: Materiality (with audience handling slime)",
@@ -63,6 +72,7 @@
         "duration": "open"
     },
     "vector_7 repeat": {
+        "id": 9,
         "vector" : 7,
         "transition" : true,
         "name": "Relational Compound [EEG sonification B - Abdominal Tango]",
@@ -70,6 +80,7 @@
         "duration": 150000
     },
     "vector_6.2": {
+        "id": 10,
         "vector" : 6.2,
         "transition" : true,
         "name": "Index of Composition",
@@ -77,6 +88,7 @@
         "duration": 90000
     },
     "vector_5.3": {
+        "id": 11,
         "vector" : 5.3,
         "transition" : true,
         "name": "Index of Touching: Squeezy Balls",
@@ -84,6 +96,7 @@
         "duration": 30000
     },
     "vector_8": {
+        "id": 12,
         "vector" : 8,
         "transition" : false,
         "name": "Single Compound",

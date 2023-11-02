@@ -89,15 +89,22 @@ class App:
         self.vector_frame.pack(fill=tk.X) 
         self.sound_time_label = tk.Label(self.vector_frame, text="MM:SS")
         self.sound_time_label.pack(side=tk.LEFT)
-        self.vector_label = tk.Label(self.vector_frame, text=f'VECTOR {self.sections[0]["vector"]}')
-        self.vector_label.pack(side=tk.LEFT, padx= 10)
+         # Create a StringVar for the dropdown menu
+        self.vector_var = tk.StringVar(self.root)
+        self.vector_var.set(f'VECTOR {self.sections[self.current_section_index]["vector"]}')  # default value
 
+        # Dropdown menu for selecting the vector
+        self.vector_dropdown = tk.OptionMenu(self.vector_frame, self.vector_var, 
+                                     *(f'VECTOR {section["vector"]}' for section in self.sections), 
+                                     command=self.on_vector_select)
+        
+        self.vector_dropdown.pack(side=tk.LEFT, padx=10)
 
         self.toggle_section_button = tk.Button(self.vector_frame, text="Start", 
                                                command=self.toggle_section)
         self.toggle_section_button.pack(side=tk.LEFT)
 
-        self.name_label = tk.Label(self.vector_frame, text=self.sections[0]["name"])
+        self.name_label = tk.Label(self.vector_frame, text=self.sections[self.current_section_index]["name"])
         self.name_label.pack(side=tk.LEFT, padx= 2)
         
         # AUDIO RELATED NAVBAR
@@ -128,42 +135,60 @@ class App:
         self.update_timers()
 
     # ==== SECTION ====
-
+    def on_vector_select(self, choice):
+        # Extract the vector label from the choice
+        vector_label = choice.replace('VECTOR ', '')  # This assumes choice is like "VECTOR 5.2"
+        # Find the index of the section with the selected vector label
+        self.current_section_index = next((index for index, section in enumerate(self.sections) 
+                                        if str(section["vector"]) == vector_label), 0)
+        # Update the name label and any other UI components as necessary
+        current_section = self.sections[self.current_section_index]
+        self.name_label.config(text=current_section["name"])
+        
     def toggle_section(self):
         current_section = self.sections[self.current_section_index]
 
         if self.section_state == "STOPPED":
-            # Start the section
-            u_time = time.time_ns()
-            print(u_time)
-            self.section_state = "STARTED"
-            message = f"VECTOR{current_section['vector']} STARTED"
-            self.send_message_all(message)
-            self.vector_label.config(text=f'VECTOR {current_section["vector"]}')
-            self.name_label.config(text=current_section["name"])
-            self.toggle_section_button.config(text='STOP')
-            self.button_timer = time.time()
-            
-            # Schedule the section to automatically stop after the specified duration
-            duration_ms = current_section["duration"]
-            if(duration_ms != "open"):
-                self.root.after(duration_ms, self.auto_stop_section)
+            # If the section requires a transition, play the beep first
+            if current_section["transition"]:
+                # Start the transition beep and delay starting the timer until it completes
+                self.transition_beep.sequence_complete_callback = self.on_transition_complete  # Set the beep callback
+                self.loop.run_in_executor(concurrent.futures.ThreadPoolExecutor(), self.transition_beep.start)
+            else:
+                # If no transition is needed, start the section timer immediately
+                self.start_section_logic()
         else:
             # Stop the section
             self.stop_section_logic()
 
+    def start_section_logic(self):
+        current_section = self.sections[self.current_section_index]
+
+        # Logic to start the section timer goes here
+        self.section_state = "STARTED"
+        message = f"VECTOR_{current_section['vector']} STARTED"
+        self.send_message_all(message)
+        self.vector_var.set(f'VECTOR {current_section["vector"]}')  # Update dropdown
+        self.name_label.config(text=current_section["name"])
+        self.toggle_section_button.config(text='Stop')
+        self.button_timer = time.time()
+        
+        # Schedule the section to automatically stop after the specified duration
+        duration_ms = self.sections[self.current_section_index]["duration"]
+        if duration_ms != "open":
+            self.root.after(duration_ms, self.auto_stop_section)
+    
     def stop_section_logic(self):
         current_section = self.sections[self.current_section_index]
         
         self.section_state = "STOPPED"
-        message = f"{current_section['name']} STOPPED"
+        message = f'VECTOR {current_section["vector"]} STOPPED'
         self.send_message_all(message)
         # Increase the current section index (with wrap-around)
         self.current_section_index = (self.current_section_index + 1) % len(self.sections)
         current_section = self.sections[self.current_section_index]
-        self.vector_label.config(text=f'VECTOR {current_section["vector"]}')
         self.name_label.config(text=current_section["name"])
-        self.toggle_section_button.config(text='START')
+        self.toggle_section_button.config(text="START")
         self.button_timer = None
         # ... Other logic related to stopping the section
 
@@ -186,9 +211,10 @@ class App:
         message = f"TRANS:{frequency}"
         self.send_message_all(message)
 
-    def on_transition_complete(self):
-        self.transition_beep_button.config(text="Start Transition Beep")
-        print("Transition beep sequence completed!")
+    def on_transition_complete(self, status):
+        if status == "complete":
+            # Once the transition is complete, start the section timer
+            self.start_section_logic()
 
     # ==== FAKE P300 TEST ====
     def toggle_fake_p300_test(self):

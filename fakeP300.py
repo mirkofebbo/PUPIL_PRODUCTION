@@ -55,6 +55,7 @@ class FakeP300Test:
     def start(self):
         # Initialize Pygame mixer
         pygame.mixer.init()
+        pygame.mixer.music.set_volume(0.6)
         self.running = True
         self.run()
 
