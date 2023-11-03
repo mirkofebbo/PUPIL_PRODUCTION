@@ -15,7 +15,6 @@ class Talker:
 
     def __init__(self, timeout=1):
         self.serial = serial.Serial('COM3', 115200, timeout=timeout)
-        print()
         
     def send(self, text: str):
         line = '%s\r\f' % text

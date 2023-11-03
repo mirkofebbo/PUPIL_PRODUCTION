@@ -22,6 +22,7 @@ class DeviceHandler:
         try:
             self.device = Device.from_discovered_device(self.dev_info)
             self.status = await self.device.get_status()
+            print(self.device.full_name)
         except ConnectionRefusedError:
             print(f"Connection refused by device {self.dev_info['name']}")
             self.connected = False  # Update the connection status flag

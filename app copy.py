@@ -23,9 +23,6 @@ from jamie import Talker
 # Switch statement for my sanity 
 import enum
 
-
-# logic got confused imposible to stop vector
-
 # Define an enumeration for vector states
 class SectionState(enum.Enum):
     STOPPED = enum.auto()
@@ -158,9 +155,7 @@ class App:
         # Update the name label and any other UI components as necessary
         current_vector = self.sections[self.current_section_index]
         self.name_label.config(text=current_vector["name"])
-        self.toggle_section_button.config(text='Stop')
-        self.button_timer = None
-
+        
     def toggle_section(self):
         current_vector = self.sections[self.current_section_index]
 
@@ -242,10 +237,11 @@ class App:
             # Run the P300 start function in a thread pool
             self.loop.run_in_executor(concurrent.futures.ThreadPoolExecutor(), self.fake_p300.start)
             self.fake_p300_test_button.config(text="Stop Fake P300 Test")
+            self.button_timer = time.time()
         else:
             self.fake_p300.stop()
             self.fake_p300_test_button.config(text="Start Fake P300 Test")
-
+            self.button_timer = None
 
     def on_fake_tone_played(self, frequency):
         # Call back function when we have a new beep
@@ -258,9 +254,11 @@ class App:
             # Run the P300 start function in a thread pool
             self.loop.run_in_executor(concurrent.futures.ThreadPoolExecutor(), self.p300.start)
             self.p300_test_button.config(text="Stop P300 Test")
+            self.button_timer = time.time()
         else:
             self.p300.stop()
             self.p300_test_button.config(text="Start P300 Test")
+            self.button_timer = None
 
     def on_tone_played(self, frequency):
         # Call back function when we have a new beep
@@ -306,9 +304,9 @@ class App:
         # Send message through LSL
         self.outlet.push_sample([formatted_message])
         # BLUE BALLS 
-        blue_balls = Talker()
-        blue_balls.send(f'log("{formatted_message}")')
-        blue_balls.close()
+        # blue_balls = Talker()
+        # blue_balls.send(f'log("{formatted_message}")')
+        # blue_balls.close()
 
         self.write_to_csv(u_time, lsl_time, human_time, message)
 
