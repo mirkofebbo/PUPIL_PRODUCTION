@@ -51,7 +51,7 @@ class DeviceHandler:
 
         # Start recording
         recording_id = await self.device.recording_start()
-        print(f"Initiated recording with id {recording_id}")
+        print(f"Initiated recording {self.dev_info['name']} with id {recording_id}")
 
     async def stop_recording(self):
         if not self.connected:

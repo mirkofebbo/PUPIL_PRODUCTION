@@ -7,7 +7,7 @@ class P300Test:
         pygame.init()
 
         # Constants
-        self.total_tones = 360
+        self.total_tones = 300
         self.tone_duration_ms = 200
         self.interval_ms = 800
         self.tones_ratio = [0.8, 0.2]

@@ -34,15 +34,16 @@ class SectionState(enum.Enum):
     STOP_VECTOR = enum.auto()
     END_TRANSITION = enum.auto()
 
-file_name = 'TEST_'
+file_name = 'TUE_'
 
 class App:
 
     def __init__(self, root, loop):
-
+        # Setup threading items
         self.root = root
         self.handlers = []
         self.loop = loop
+        # Setup pupil device
         self.device_frame = tk.Frame(self.root)
         self.device_frame.pack(fill=tk.X)
         self.is_any_recording = False 
@@ -115,7 +116,7 @@ class App:
         self.vector_dropdown.pack(side=tk.LEFT, padx=10)
 
         self.toggle_section_button = tk.Button(self.vector_frame, text="Start", 
-                                               command=self.toggle_section)
+                                               command=self.toggle_vector)
         self.toggle_section_button.pack(side=tk.LEFT)
 
         self.name_label = tk.Label(self.vector_frame, text=self.sections[self.current_section_index]["name"])
@@ -148,7 +149,9 @@ class App:
         # Start timers
         self.update_timers()
 
-    # ==== vector ====
+    # ======================
+    # ==== VECTOR LOGIC ====
+    # ======================
     def on_vector_select(self, choice):
         # Extract the vector label from the dropdown menu
         vector_label = choice.replace('VECTOR ', '')  # This assumes choice is like "VECTOR 5.2"
@@ -158,10 +161,10 @@ class App:
         # Update the name label and any other UI components as necessary
         current_vector = self.sections[self.current_section_index]
         self.name_label.config(text=current_vector["name"])
-        self.toggle_section_button.config(text='Stop')
+        self.toggle_section_button.config(text='Start')
         self.button_timer = None
 
-    def toggle_section(self):
+    def toggle_vector(self):
         current_vector = self.sections[self.current_section_index]
 
         if self.vector_state == SectionState.STOPPED:
@@ -171,17 +174,19 @@ class App:
                 self.loop.run_in_executor(concurrent.futures.ThreadPoolExecutor(), self.transition_beep.start)
             else:
                 self.vector_state = SectionState.START_VECTOR
-                self.start_section_logic()
+                self.start_vector_logic()
+
         elif self.vector_state == SectionState.START_VECTOR:
             if current_vector["transition"]:
                 self.vector_state = SectionState.END_TRANSITION
                 self.transition_beep.sequence_complete_callback = self.on_transition_complete
                 self.loop.run_in_executor(concurrent.futures.ThreadPoolExecutor(), self.transition_beep.start)
+                self.stop_vector_logic()
             else:
                 self.vector_state = SectionState.STOP_VECTOR
-                self.stop_section_logic()
+                self.stop_vector_logic()
 
-    def start_section_logic(self):
+    def start_vector_logic(self):
         current_vector = self.sections[self.current_section_index]
 
         # Logic to start the vector timer goes here
@@ -196,9 +201,10 @@ class App:
         # Schedule the vector to automatically stop after the specified duration
         duration_ms = self.sections[self.current_section_index]["duration"]
         if duration_ms != "open":
-            self.root.after(duration_ms, self.auto_stop_section)
+            self.root.after(duration_ms, self.auto_stop_vector_logic)
+
     
-    def stop_section_logic(self):
+    def stop_vector_logic(self):
         current_vector = self.sections[self.current_section_index]
         
         self.vector_state = SectionState.STOPPED
@@ -212,11 +218,15 @@ class App:
         self.button_timer = None
         # ... Other logic related to stopping the vector
 
-    def auto_stop_section(self):
+    def auto_stop_vector_logic(self):
+        # self.vector_state == SectionState.STOP_VECTOR
         if self.vector_state == SectionState.START_VECTOR:  # Check to make sure the vector is still running
-            self.stop_section_logic()    
+            self.vector_state == SectionState.END_TRANSITION
+            self.stop_vector_logic()    
 
+    # =========================
     # ==== TRANSITION BEEP ====
+    # =========================
     def toggle_transition_beep(self):
         if self.transition_beep_button.cget("text") == "Start Transition Beep":
             # Run the TransitionBeep start function in a thread pool
@@ -232,11 +242,17 @@ class App:
         self.send_message_all(message)
 
     def on_transition_complete(self, status):
+        self.transition_beep_button.config(text="Start Transition Beep")
         if status == "complete" and self.vector_state == SectionState.STARTING_TRANSITION:
             self.vector_state = SectionState.START_VECTOR
-            self.start_section_logic()
+            self.start_vector_logic()
+        if status == "complete" and self.vector_state == SectionState.END_TRANSITION:
+            self.vector_state = SectionState.STOPPED
+            self.stop_vector_logic()
 
+    # ========================
     # ==== FAKE P300 TEST ====
+    # ========================
     def toggle_fake_p300_test(self):
         if self.fake_p300_test_button.cget("text") == "Start Fake P300 Test":
             # Run the P300 start function in a thread pool
@@ -246,13 +262,14 @@ class App:
             self.fake_p300.stop()
             self.fake_p300_test_button.config(text="Start Fake P300 Test")
 
-
     def on_fake_tone_played(self, frequency):
         # Call back function when we have a new beep
         message = f"FAKE:{frequency}"
         self.send_message_all(message)
 
+    # ===================
     # ==== P300 TEST ====
+    # ===================
     def toggle_p300_test(self):
         if self.p300_test_button.cget("text") == "Start P300 Test":
             # Run the P300 start function in a thread pool
@@ -267,7 +284,9 @@ class App:
         message = f"P300:{frequency}"
         self.send_message_all(message)
 
+    # ===============
     # ==== TIMER ====
+    # ===============
     def update_timers(self):
         # Update the total time since program started
         elapsed_total = time.time() - self.start_time
@@ -284,7 +303,9 @@ class App:
         # Call this method again after 1000ms (1 second)
         self.root.after(1000, self.update_timers)
 
-    #==== SENDING MESSAGE ====
+    # =========================
+    # ==== SENDING MESSAGE ====
+    # =========================
     def send_message_all(self, message):
         # Default message setup
         lsl_time = local_clock()
@@ -306,11 +327,21 @@ class App:
         # Send message through LSL
         self.outlet.push_sample([formatted_message])
         # BLUE BALLS 
-        blue_balls = Talker()
-        blue_balls.send(f'log("{formatted_message}")')
-        blue_balls.close()
+        try:
+            blue_balls = Talker()
+            reply=blue_balls.send(f'log("{formatted_message}")')
+            blue_balls.close()
+        except:
+            
+            pass
 
-        self.write_to_csv(u_time, lsl_time, human_time, message)
+        if (self.vector_state == SectionState.STOPPED):
+            self.write_to_csv(u_time, lsl_time, human_time, message)
+        else :
+            current_vector = self.sections[self.current_section_index]
+            self.write_to_csv(u_time, lsl_time, human_time, message, current_vector['id'], current_vector['name'], current_vector['people'])
+        
+        
 
     def heartbeat(self):
         # This function sends a heartbeat message to all devices every 10 seconds
@@ -320,8 +351,10 @@ class App:
         # the function itself doesn't need to be threadsafe. 
         # The after method is the standard way to schedule recurring events in Tkinter.
         # self.write_to_csv(lsl_time, "H", "STAGE TEST")
-
-    # ==== RECORDING ====
+    
+    # =========================
+    # ==== RECORDING PUPIL ====
+    # =========================
     def toggle_recording_all(self):
         if self.is_any_recording:
             # If any recording is in progress, stop all
@@ -347,8 +380,10 @@ class App:
             asyncio.run_coroutine_threadsafe(handler.start_recording(), self.loop)
             handler.is_recording = True
             button.config(text="Stop Recording")
-
-    # ==== DEVICE DISCOVERY ====
+    
+    # ================================
+    # ==== PUPIL DEVICE DISCOVERY ====
+    # ================================
     def discover_devices_threadsafe(self):
         # Schedule discover_devices() coroutine to run on the asyncio event loop
         asyncio.run_coroutine_threadsafe(self.discover_devices(), self.loop)
@@ -382,8 +417,9 @@ class App:
         # If devices found, schedule the display_devices coroutine
         devices_info = await self.get_device_info()  # Get the updated info
         self.root.after(0, self.display_devices, devices_info)  # Schedule on the Tkinter event loop
-
-    # ==== DEVICE DISPLAY ====
+    # ==============================
+    # ==== PUPIL DEVICE DISPLAY ====
+    # ==============================
     async def get_device_info(self):
         return [await handler.get_info() for handler in sorted(self.handlers, key=lambda handler: handler.dev_info.name)]
 
@@ -412,8 +448,9 @@ class App:
 
             device_label = tk.Label(self.device_frame, text=device_info)
             device_label.grid(row=i, column=1)  # put the text on the right
-
+    # ======================
     # ==== DATA LOGGING ====
+    # ======================
     def init_csv_writer(self):
         # Initializes a CSV writer with a new file name based on the current time
         data_dir = './data/'
@@ -422,7 +459,7 @@ class App:
         filename = f'{data_dir}{file_name}{self.get_next_file_number()}_{now.strftime("%H-%M-%S-%f_%d-%m-%Y")}.csv'
         self.csv_file = open(filename, 'w', newline='')
         self.csv_writer = csv.writer(self.csv_file)
-        self.csv_writer.writerow(['U_TIME', 'LSL_TIME', 'HUMAN_TIME', 'MESSAGE'])
+        self.csv_writer.writerow(['U_TIME', 'LSL_TIME', 'HUMAN_TIME', 'MESSAGE', "VECTOR_NUM", "VECTOR_NAME", "PERFORMER"])
         self.csv_file_is_open = True
 
     def get_next_file_number(self):
@@ -433,23 +470,27 @@ class App:
         perfo_files = [f for f in files if f.startswith(file_name)]
         return len(perfo_files)
 
-    def write_to_csv(self, u_time, lsl_time, human_time, message):
+    def write_to_csv(self, u_time, lsl_time, human_time, message, vector_num=None, vector_name=None, performer=None):
         # Check if file is open before writing
         if self.csv_file_is_open:
-            self.csv_writer.writerow([u_time, lsl_time, human_time, message])
+            self.csv_writer.writerow([u_time, lsl_time, human_time, message, vector_num, vector_name, performer])
 
     def close_csv(self):
         if self.csv_file_is_open:
             self.csv_file.close()
             self.csv_file_is_open = False
-  
+    
+    # ======================
+    # ==== TERMINATING ====
+    # ======================
     def close(self):
+        # Close all audio task 
         self.p300.stop()
         self.fake_p300.stop()
         self.transition_beep.stop()
-        # Cancel the heartbeat function
+        # Cancel message task 
         self.root.after_cancel(self.heartbeat_id)
-        # Cancel all tasks
+        # Cancel all tasks /threads
         for task in self.tasks:
             task.cancel()
 

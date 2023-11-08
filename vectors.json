@@ -4,15 +4,15 @@
         "vector" : 0,
         "transition" : false,
         "name": "Fake P300",
-        "people": [],
+        "people": "",
         "duration": "open"
     },
     "vector_1": {
         "id": 1,
         "vector" : 1,
         "transition" : false,
-        "name": "Index of Time and Change",
-        "people": [],
+        "name": "Index of Time and Change que 2:10",
+        "people": "",
         "duration": "open"
     },
     "vector_2": {
@@ -20,7 +20,7 @@
         "vector" : 2,
         "transition" : true,
         "name": "Index of Breathing",
-        "people": ["Siin", "Nathaniel", "Matthias", "Ben"],
+        "people": "Siin, Ben, Guido, Matthias",
         "duration": 90000
     },
     "vector_3": {
@@ -28,7 +28,7 @@
         "vector" : 3,
         "transition" : true,
         "name": "Spectrum of Sight",
-        "people": ["Siin", "Nathaniel", "Matthias", "Heni", "Rachel"],
+        "people": "Siin, Rachel, Ben, Matthias",
         "duration": 90000
     },
     "vector_4": {
@@ -36,14 +36,14 @@
         "vector" : 4,
         "transition" : true,
         "name": "Spectrum of Sounding",
-        "people": [],
+        "people": "Siin, Heni, Rachel, Ben, Matthias, Nathaniel",
         "duration": "open"
     },
     "vector_5.1": {
         "id": 5,
         "vector" : 5.1,
         "transition" : true,
-        "name": "Index of Touching: Sites of Connection",
+        "name": "GROUP SOUND Index of Touching: Sites of Connection",
         "people": "",
         "duration": 120000
     },
@@ -51,15 +51,15 @@
         "id": 6,
         "vector" : 6.1,
         "transition" : true,
-        "name": "Index of Composition",
-        "people": ["Siin", "Rachel"],
+        "name": "Index of Creativity",
+        "people": "Siin, Rachel",
         "duration": 90000
     },
     "vector_7": {
         "id": 7,
         "vector" : 7,
         "transition" : true,
-        "name": "Relational Compound [EEG sonification condition A - Abdominal Tango]",
+        "name": "GROUP SOUND Relational Compound [EEG sonification condition A - Abdominal Tango]",
         "people": "Ben Matthias",
         "duration": 150000
     },
@@ -67,7 +67,7 @@
         "id": 8,
         "vector" : 5.2,
         "transition" : true,
-        "name": "Index of Touching: Materiality (with audience handling slime)",
+        "name": "Index of Touching: Materiality ",
         "people": "Rachel Ben",
         "duration": "open"
     },
@@ -75,7 +75,7 @@
         "id": 9,
         "vector" : 7,
         "transition" : true,
-        "name": "Relational Compound [EEG sonification B - Abdominal Tango]",
+        "name": "GROUP SOUND Relational Compound [EEG sonification B - Abdominal Tango]",
         "people": "Heni Siin",
         "duration": 150000
     },
@@ -93,14 +93,62 @@
         "transition" : true,
         "name": "Index of Touching: Squeezy Balls",
         "people": "",
-        "duration": 30000
+        "duration": 45000
     },
     "vector_8": {
         "id": 12,
         "vector" : 8,
         "transition" : false,
-        "name": "Single Compound",
-        "people": "",
+        "name": "SOLO SOUND Single Compound",
+        "people": "Nathaniel",
         "duration": 120000
+    },
+    "vector_9": {
+        "id": 13,
+        "vector" : 9,
+        "transition" : false,
+        "name": "Reading 1",
+        "people": "Rachel Ben",
+        "duration": "open"
+    },
+    "vector_10": {
+        "id": 14,
+        "vector" : 10,
+        "transition" : false,
+        "name": "Reading 2",
+        "people": "Siin, Rachel, Participant",
+        "duration": "open"
+    },
+    "vector_11": {
+        "id": 15,
+        "vector" : 11,
+        "transition" : false,
+        "name": "Reading 3",
+        "people": "Heni, Nathaniel, Participant",
+        "duration": "open"
+    },
+    "vector_12": {
+        "id": 16,
+        "vector" : 12,
+        "transition" : false,
+        "name": "Reading 4",
+        "people": "Heni, Rachel, Ben",
+        "duration": "open"
+    },
+    "vector_13": {
+        "id": 17,
+        "vector" : 13,
+        "transition" : false,
+        "name": "VIDEO Reading 5",
+        "people": "",
+        "duration": "open"
+    },
+    "vector_14": {
+        "id": 18,
+        "vector" : 14,
+        "transition" : false,
+        "name": "Reading 6",
+        "people": "",
+        "duration": 300000
     }
 }
