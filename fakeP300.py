@@ -9,7 +9,7 @@ class FakeP300Test:
         # Constants
         self.tone_duration_ms = 200
         self.interval_ms = 800
-        self.first_tone_frequency = 1200
+        self.first_tone_frequency = 1000 #1200
         self.running = False
         self.tone_callback = tone_callback
 

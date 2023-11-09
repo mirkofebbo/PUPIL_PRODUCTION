@@ -11,8 +11,8 @@ class P300Test:
         self.tone_duration_ms = 200
         self.interval_ms = 800
         self.tones_ratio = [0.8, 0.2]
-        self.first_tone_frequency = 1200
-        self.second_tone_frequency = 1000
+        self.first_tone_frequency = 1000 
+        self.second_tone_frequency = 1200
         self.running = False
         self.tone_callback = tone_callback
         

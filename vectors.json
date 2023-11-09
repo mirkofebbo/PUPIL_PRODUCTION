@@ -141,14 +141,13 @@
         "transition" : false,
         "name": "VIDEO Reading 5",
         "people": "",
-        "duration": "open"
+        "duration": 345000
     },
-    
     "vector_14": {
         "id": 18,
         "vector" : 14,
         "transition" : false,
-        "name": "Reading 6",
+        "name": "SOUND Reading 6",
         "people": "",
         "duration": 300000
     }

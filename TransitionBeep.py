@@ -33,6 +33,7 @@ class TransitionBeep:
         t = np.arange(0, duration_ms / 1000.0, 1.0 / sample_rate)
         audio_waveform = np.sin(2 * np.pi * frequency * t)
 
+        audio_waveform *= 0.8  # This reduces the waveform amplitude by half
         # Convert to 16-bit signed integers
         audio_waveform = (audio_waveform * 32767.0).astype(np.int16)
 

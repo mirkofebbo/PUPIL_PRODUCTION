@@ -34,7 +34,7 @@ class SectionState(enum.Enum):
     STOP_VECTOR = enum.auto()
     END_TRANSITION = enum.auto()
 
-file_name = 'WED_'
+file_name = 'THU_'
 
 class App:
 
@@ -265,7 +265,7 @@ class App:
     def on_fake_tone_played(self, frequency):
         # Call back function when we have a new beep
         message = f"FAKE:{frequency}"
-        self.send_message_all(message)
+        # self.send_message_all(message)
 
     # ===================
     # ==== P300 TEST ====
