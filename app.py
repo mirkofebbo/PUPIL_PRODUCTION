@@ -34,7 +34,7 @@ class SectionState(enum.Enum):
     STOP_VECTOR = enum.auto()
     END_TRANSITION = enum.auto()
 
-file_name = 'TUE_'
+file_name = 'WED_'
 
 class App:
 

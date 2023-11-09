@@ -34,6 +34,7 @@ class FakeP300Test:
         t = np.arange(0, self.tone_duration_ms / 1000.0, 1.0 / sample_rate)
         audio_waveform = np.sin(2 * np.pi * frequency * t)
 
+        audio_waveform *= 0.35  # This reduces the waveform amplitude by half
         # Convert to 16-bit signed integers
         audio_waveform = (audio_waveform * 32767.0).astype(np.int16)
 
@@ -55,7 +56,6 @@ class FakeP300Test:
     def start(self):
         # Initialize Pygame mixer
         pygame.mixer.init()
-        pygame.mixer.music.set_volume(0.6)
         self.running = True
         self.run()
 
