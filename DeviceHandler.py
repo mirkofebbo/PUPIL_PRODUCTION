@@ -71,6 +71,7 @@ class DeviceHandler:
             estimate = await time_offset_estimator.estimate()
             u_time_offset = estimate.time_offset_ms.mean * 1000000  # Convert MS to NS 
             newtime = u_time - u_time_offset
+            # print(self.status.phone.device_name, ' Msg Sent')
             await self.device.send_event(f'{message} o:{u_time_offset}', event_timestamp_unix_ns=newtime)
             # print(event)
         except:

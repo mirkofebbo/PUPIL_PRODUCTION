@@ -34,7 +34,7 @@ class SectionState(enum.Enum):
     STOP_VECTOR = enum.auto()
     END_TRANSITION = enum.auto()
 
-file_name = 'THU_'
+file_name = 'FRI_'
 
 class App:
 
@@ -239,7 +239,7 @@ class App:
     def on_beep_played(self, frequency):
         # Callback function when we have a new beep
         message = f"TRANS:{frequency}"
-        self.send_message_all(message)
+        self.send_message_all(message, send_to_phone = False)
 
     def on_transition_complete(self, status):
         self.transition_beep_button.config(text="Start Transition Beep")
@@ -265,7 +265,7 @@ class App:
     def on_fake_tone_played(self, frequency):
         # Call back function when we have a new beep
         message = f"FAKE:{frequency}"
-        # self.send_message_all(message)
+        self.send_message_all(message, send_to_phone = False)
 
     # ===================
     # ==== P300 TEST ====
@@ -282,7 +282,7 @@ class App:
     def on_tone_played(self, frequency):
         # Call back function when we have a new beep
         message = f"P300:{frequency}"
-        self.send_message_all(message)
+        self.send_message_all(message, send_to_phone = False)
 
     # ===============
     # ==== TIMER ====
@@ -306,7 +306,7 @@ class App:
     # =========================
     # ==== SENDING MESSAGE ====
     # =========================
-    def send_message_all(self, message):
+    def send_message_all(self, message, send_to_phone = True):
         # Default message setup
         lsl_time = local_clock()
         u_time = time.time_ns()
@@ -319,10 +319,10 @@ class App:
         formatted_message = f"{message} T:{u_time} LSL:{lsl_time} HT:{human_time}" # Add LSL time and unix time to the message
 
         print(formatted_message)
-        
-        for handler in self.handlers:
-            task = asyncio.run_coroutine_threadsafe(handler.send_message(formatted_message, u_time), self.loop)
-            self.tasks.append(task)
+        if(send_to_phone):
+            for handler in self.handlers:
+                task = asyncio.run_coroutine_threadsafe(handler.send_message(formatted_message, u_time), self.loop)
+                self.tasks.append(task)
 
         # Send message through LSL
         self.outlet.push_sample([formatted_message])

@@ -60,7 +60,7 @@
         "vector" : 7,
         "transition" : true,
         "name": "GROUP SOUND Relational Compound [EEG sonification condition A - Abdominal Tango]",
-        "people": "Ben Matthias",
+        "people": "Ben Rachel",
         "duration": 150000
     },
     "vector_5.2": {
@@ -132,7 +132,7 @@
         "vector" : 12,
         "transition" : false,
         "name": "Reading 4",
-        "people": "Heni, Rachel, Ben",
+        "people": "Heni, Ben, EEG PARTICIPANT",
         "duration": "open"
     },
     "vector_13": {
@@ -148,7 +148,7 @@
         "vector" : 14,
         "transition" : false,
         "name": "SOUND Reading 6",
-        "people": "",
+        "people": "Ben, Nathaniel, Rachel, Siin, Heni",
         "duration": 300000
     }
 }
